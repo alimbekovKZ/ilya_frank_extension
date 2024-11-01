@@ -25,10 +25,17 @@ function enableTextSelection() {
     const selectedText = event.target.innerText;
     console.log("Selected Text:", selectedText);
     
-    document.body.removeEventListener('mouseover', highlightElement);
-    document.body.removeEventListener('click', selectElement);
-    
     // Send the selected text back to the background script
     chrome.runtime.sendMessage({ action: "textSelected", text: selectedText });
   }
 }
+
+// Add a listener for the text selected action
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "textSelected") {
+    // Send the selected text to the content script to process it
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, { action: "applyIlyaFrankMethod", text: request.text });
+    });
+  }
+});
